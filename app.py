@@ -7,8 +7,10 @@ This file creates your application.
 """
 
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 from werkzeug import secure_filename
+from flask.ext.cors import CORS
+
 
 
 UPLOAD_FOLDER = '/Users/mfaulk/uploads'
@@ -19,6 +21,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configur
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+cors = CORS(app, resources={r'/*' : {"origins":"*"}})
 
 
 def allowed_file(filename):
