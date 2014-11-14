@@ -8,10 +8,21 @@ This file creates your application.
 
 import os
 from flask import Flask, render_template, request, redirect, url_for
+from werkzeug import secure_filename
+
+
+UPLOAD_FOLDER = '/Users/mfaulk/uploads'
+ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 app = Flask(__name__)
-
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 ###
@@ -29,6 +40,16 @@ def about():
     """Render the website's about page."""
     return render_template('about.html')
 
+
+@app.route('/upload/', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file:
+            filename = secure_filename(file.filename)
+            print filename
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'] , filename ))
+            return render_template('home.html')
 
 ###
 # The functions below should be applicable to all Flask apps.
