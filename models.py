@@ -8,5 +8,9 @@ class Table(Base):
     filename = Column(String)
     rawcontents = Column(String)
 
+    def __init__(self, filename, rawcontents):
+        self.filename = filename
+        self.rawcontents = rawcontents
+
     def __repr__(self):
         return "<Table(filename=%s, rawcontents=%s)>" % (self.filename, self.rawcontents)

@@ -8,9 +8,12 @@ This file creates your application.
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, Response
-
 from werkzeug import secure_filename
 from flask.ext.cors import CORS
+from pandas import DataFrame, read_csv
+import pandas as pd
+from database import db_session
+from models import *
 
 UPLOAD_FOLDER = '/Users/mfaulk/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
@@ -28,12 +31,9 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-from database import db_session
-
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db_session.remove()
-
 
 
 ###
@@ -59,7 +59,16 @@ def upload():
         if file:
             filename = secure_filename(file.filename)
             print filename
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'] , filename ))
+            rawcontents = file.read()
+            t = Table(filename, rawcontents)
+            db_session.add(t)
+            db_session.commit()
+            print(t.id)
+
+            #df = pd.read_csv(file, header=None, sep='\t', error_bad_lines=False)
+            #print(df.shape)
+            #print(df.to_json())
+            #file.save(os.path.join(app.config['UPLOAD_FOLDER'] , filename ))
             return render_template('home.html')
 
 ###
