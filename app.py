@@ -8,11 +8,9 @@ This file creates your application.
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, Response
-from flask.ext.sqlalchemy import SQLAlchemy
+
 from werkzeug import secure_filename
 from flask.ext.cors import CORS
-
-
 
 UPLOAD_FOLDER = '/Users/mfaulk/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
@@ -21,15 +19,21 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-db = SQLAlchemy(app)
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 
 cors = CORS(app, resources={r'/*' : {"origins":"*"}})
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+from database import db_session
+
+@app.teardown_appcontex
+def shutdown_session(exception=None):
+    db_session.remove()
+
 
 
 ###
