@@ -8,6 +8,7 @@ This file creates your application.
 
 import os
 from flask import Flask, render_template, request, redirect, url_for, Response
+from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
 from flask.ext.cors import CORS
 
@@ -20,6 +21,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+db = SQLAlchemy(app)
 
 cors = CORS(app, resources={r'/*' : {"origins":"*"}})
 
