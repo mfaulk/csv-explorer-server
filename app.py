@@ -10,6 +10,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, Response
 from werkzeug import secure_filename
 from flask.ext.cors import CORS
+import flask.ext.restless
 from pandas import DataFrame, read_csv
 import pandas as pd
 from database import db_session
@@ -35,6 +36,11 @@ def allowed_file(filename):
 def shutdown_session(exception=None):
     db_session.remove()
 
+
+# Create the Flask-Restless API manager
+manager = flask.ext.restless.APIManager(app, session=db_session)
+
+manager.create_api(Table, methods=['GET', 'POST', 'DELETE'])
 
 ###
 # Routing for your application.
