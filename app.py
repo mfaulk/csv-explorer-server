@@ -7,7 +7,8 @@ This file creates your application.
 """
 
 import os
-from flask import Flask, render_template, request, redirect, url_for, Response
+import requests
+from flask import Flask, render_template, request, redirect, url_for, Response, make_response
 from werkzeug import secure_filename
 from flask.ext.cors import CORS
 import flask.ext.restless
@@ -20,6 +21,9 @@ UPLOAD_FOLDER = '/Users/mfaulk/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 app = Flask(__name__)
+app.debug=True
+app.logger.debug('=== A debug message ===')
+#app.logger.warn('=== A warn message ===')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -39,8 +43,9 @@ def shutdown_session(exception=None):
 
 # Create the Flask-Restless API manager
 manager = flask.ext.restless.APIManager(app, session=db_session)
+API_PREFIX="/api/v1"
 
-manager.create_api(Table, methods=['GET', 'POST', 'DELETE'])
+manager.create_api(Table, url_prefix=API_PREFIX, methods=['GET', 'POST', 'DELETE'])
 
 ###
 # Routing for your application.
@@ -74,8 +79,25 @@ def upload():
             #df = pd.read_csv(file, header=None, sep='\t', error_bad_lines=False)
             #print(df.shape)
             #print(df.to_json())
-            #file.save(os.path.join(app.config['UPLOAD_FOLDER'] , filename ))
-            return render_template('home.html')
+
+            #TODO Remove hard-coded URL. What is the equivalent of url_for for flask-restless APIs?
+            data_url = 'http://127.0.0.1:5000/api/v1/tables/' + str(t.id)
+            app.logger.debug("requesting " + data_url)
+            # rv is of type requests.models.response
+            rv = requests.get(data_url)
+            app.logger.debug(type(rv))
+            app.logger.debug(rv.content)
+            app.logger.debug(rv.status_code)
+            app.logger.debug("...done.")
+
+            # CORS seems to make these unnecessary:
+            # resp.headers['Access-Control-Allow-Origin'] = flask.request.headers.get('Origin','*')
+            # resp.headers['Access-Control-Allow-Credentials'] = 'true'
+            # resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+            # resp.headers['Access-Control-Allow-Headers'] = flask.request.headers.get('Access-Control-Request-Headers', 'Authorization' )
+            # resp.headers['Access-Control-Max-Age'] = '1'
+            app.logger.debug("Returning.")
+            return rv.content
 
 ###
 # The functions below should be applicable to all Flask apps.
