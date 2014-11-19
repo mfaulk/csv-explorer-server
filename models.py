@@ -17,8 +17,22 @@ class Row(Base):
     __tablename__ = "rows"
 
     id = Column(Integer, primary_key=True)
-    rawcontents = Column(String)
     table_id = Column(Integer, ForeignKey('tables.id'))
+    cells = relationship("Cell", backref="row")
 
-    def __repr__(self):
-        return '<Row %r>' % self.rawcontents
+    """
+    Args:
+        cols: A sequence of values for the columns in this row. Optional.
+    """
+    def __init__(self, cols=None):
+        if cols is None:
+            cols = []
+        for val in cols:
+            cell = Cell(cellContents=val)
+            self.cells.append(cell)
+
+class Cell(Base):
+    __tablename__ = "cells"
+    id  = Column(Integer, primary_key=True)
+    cellContents = Column(String)
+    row_id = Column(Integer, ForeignKey('rows.id'))

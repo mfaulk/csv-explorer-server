@@ -22,7 +22,7 @@ ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 app = Flask(__name__)
 app.debug=True
-app.logger.debug('=== A debug message ===')
+#app.logger.debug('=== A debug message ===')
 #app.logger.warn('=== A warn message ===')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -74,7 +74,8 @@ def upload():
             contents = file.read()
             t = Table(filename=filename)
             for line in contents.split('\n'):
-                r = Row(rawcontents=line)
+                cols = line.split(",")
+                r = Row(cols)
                 t.rows.append(r)
             db_session.add(t)
             db_session.commit()
@@ -89,7 +90,7 @@ def upload():
             app.logger.debug("requesting " + data_url)
             # rv is of type requests.models.response
             rv = requests.get(data_url)
-            app.logger.debug(type(rv))
+            # app.logger.debug(type(rv))
             app.logger.debug(rv.content)
             app.logger.debug(rv.status_code)
             app.logger.debug("...done.")
