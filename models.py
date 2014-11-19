@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from database import Base
 
 class Table(Base):
@@ -6,11 +7,18 @@ class Table(Base):
 
     id = Column(Integer, primary_key=True)
     filename = Column(String)
-    rawcontents = Column(String)
-
-    def __init__(self, filename, rawcontents):
-        self.filename = filename
-        self.rawcontents = rawcontents
+    rows = relationship("Row", backref="table")
 
     def __repr__(self):
         return "<Table(filename=%s, rawcontents=%s)>" % (self.filename, self.rawcontents)
+
+
+class Row(Base):
+    __tablename__ = "rows"
+
+    id = Column(Integer, primary_key=True)
+    rawcontents = Column(String)
+    table_id = Column(Integer, ForeignKey('tables.id'))
+
+    def __repr__(self):
+        return '<Row %r>' % self.rawcontents

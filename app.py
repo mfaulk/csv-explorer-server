@@ -38,6 +38,7 @@ def allowed_file(filename):
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
+    # This may not be required
     db_session.remove()
 
 
@@ -70,8 +71,11 @@ def upload():
         if file:
             filename = secure_filename(file.filename)
             print filename
-            rawcontents = file.read()
-            t = Table(filename, rawcontents)
+            contents = file.read()
+            t = Table(filename=filename)
+            for line in contents.split('\n'):
+                r = Row(rawcontents=line)
+                t.rows.append(r)
             db_session.add(t)
             db_session.commit()
             print(t.id)
