@@ -8,7 +8,6 @@ This file creates your application.
 
 import os
 import requests
-import json
 from flask import Flask, render_template, request, redirect, url_for, Response, make_response
 from flask.ext.cors import CORS
 from bson import json_util
@@ -20,7 +19,6 @@ ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 app = Flask(__name__)
 app.debug=True
-#app.logger.debug('=== A debug message ===')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
 cors = CORS(app, resources={r'/*' : {"origins":"*"}})
 
@@ -68,39 +66,39 @@ def tables():
         app.logger.debug(type(results))
         return results.to_json()
 
- # @app.route('/upload/', methods=['GET', 'POST'])
- # def upload():
- #     if request.method == 'POST':
- #         file = request.files['file']
- #         if file:
- #             filename = secure_filename(file.filename)
- #             print filename
- #             contents = file.read()
- #             t = Table(filename=filename)
- #             for line in contents.split('\n'):
- #                 cols = line.split(',')
- #                 app.logger.debug(cols)
- #                 r = Row().populate(cols)
- #                 t.rows.append(r)
+@app.route('/api/v1/table/<table_id>', methods=['GET'])
+def table(table_id):
+    if request.method == 'GET':
+        result = Table.objects.get(id=table_id)
+        return result.to_json()
 
-#             #TODO Remove hard-coded URL. What is the equivalent of url_for for flask-restless APIs?
-#             data_url = 'http://127.0.0.1:5000/api/v1/tables/' + str(t.id)
-#             app.logger.debug("requesting " + data_url)
-#             # rv is of type requests.models.response
-#             rv = requests.get(data_url)
-#             # app.logger.debug(type(rv))
-#             app.logger.debug(rv.content)
-#             app.logger.debug(rv.status_code)
-#             app.logger.debug("...done.")
-#
-#             # CORS seems to make these unnecessary:
-#             # resp.headers['Access-Control-Allow-Origin'] = flask.request.headers.get('Origin','*')
-#             # resp.headers['Access-Control-Allow-Credentials'] = 'true'
-#             # resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
-#             # resp.headers['Access-Control-Allow-Headers'] = flask.request.headers.get('Access-Control-Request-Headers', 'Authorization' )
-#             # resp.headers['Access-Control-Max-Age'] = '1'
-#             app.logger.debug("Returning.")
-#             return rv.content
+
+@app.route('/upload/', methods=['POST'])
+def upload():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file:
+            #filename = secure_filename(file.filename)
+            file_name = file.filename
+            app.logger.debug("Received " + file_name)
+            contents = file.read()
+            table = Table(file_name=file_name)
+            for line in contents.split('\n'):
+                cols = line.split(',')
+                app.logger.debug(cols)
+                r = Row()
+                r.populate(cols)
+                table.rows.append(r)
+            table.save()
+            json_val = table.to_json()
+            app.logger.debug(json_val)
+            return table.to_json()
+        else:
+            app.logger.debug("No file provided to /upload/")
+    else:
+        app.logger.debug("Unimplemented /upload/ request method: " + request.method)
+
+
 
 ###
 # The functions below should be applicable to all Flask apps.
