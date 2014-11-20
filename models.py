@@ -1,38 +1,25 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
-from sqlalchemy.orm import relationship
-from database import Base
+from mongoengine import Document, EmbeddedDocument, StringField, ListField, EmbeddedDocumentField
 
-class Table(Base):
-    __tablename__ = "tables"
+# TODO how can I define a custom __init__ method for these? My attempts yield 'object has no attribute _data'
 
-    id = Column(Integer, primary_key=True)
-    filename = Column(String)
-    rows = relationship("Row", backref="table")
-
-    def __repr__(self):
-        return "<Table(filename=%s, rawcontents=%s)>" % (self.filename, self.rawcontents)
+class Cell(EmbeddedDocument):
+    cell_contents = StringField(max_length=1000)
 
 
-class Row(Base):
-    __tablename__ = "rows"
+class Row(EmbeddedDocument):
+    cells = ListField(EmbeddedDocumentField(Cell))
 
-    id = Column(Integer, primary_key=True)
-    table_id = Column(Integer, ForeignKey('tables.id'))
-    cells = relationship("Cell", backref="row")
-
-    """
-    Args:
-        cols: A sequence of values for the columns in this row. Optional.
-    """
-    def __init__(self, cols=None):
-        if cols is None:
-            cols = []
+    def populate(self, cols):
         for val in cols:
-            cell = Cell(cellContents=val)
-            self.cells.append(cell)
+            c = Cell(cell_contents=val)
+            self.cells.append(c)
 
-class Cell(Base):
-    __tablename__ = "cells"
-    id  = Column(Integer, primary_key=True)
-    cellContents = Column(String)
-    row_id = Column(Integer, ForeignKey('rows.id'))
+class Table(Document):
+    '''
+    A user-supplied source of tabular data
+    '''
+    file_name = StringField(required=True)
+    rows = ListField(EmbeddedDocumentField(Row))
+
+    # TODO: methods to populate table by parsing input files
+

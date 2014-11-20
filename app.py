@@ -8,45 +8,43 @@ This file creates your application.
 
 import os
 import requests
+import json
 from flask import Flask, render_template, request, redirect, url_for, Response, make_response
-from werkzeug import secure_filename
 from flask.ext.cors import CORS
-import flask.ext.restless
-from pandas import DataFrame, read_csv
-import pandas as pd
-from database import db_session
-from models import *
+from bson import json_util
+from bson.objectid import ObjectId
+from mongoengine import connect
+from models import Table, Row, Cell
 
-UPLOAD_FOLDER = '/Users/mfaulk/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 app = Flask(__name__)
 app.debug=True
 #app.logger.debug('=== A debug message ===')
-#app.logger.warn('=== A warn message ===')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-
 cors = CORS(app, resources={r'/*' : {"origins":"*"}})
 
+MONGO_DATABASE_NAME = 'memex'
+connect(MONGO_DATABASE_NAME)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    # This may not be required
-    db_session.remove()
+def insert_test_table():
+    file_name = "the_file_name.csv"
+    table = Table(file_name).save()
 
-
-# Create the Flask-Restless API manager
-manager = flask.ext.restless.APIManager(app, session=db_session)
-API_PREFIX="/api/v1"
-
-manager.create_api(Table, url_prefix=API_PREFIX, methods=['GET', 'POST', 'DELETE'])
+    file_contents = """ headerA,headerB,headerC,headerD
+                    aaa,bbb,cc,ddddd
+                    1,2,44,10"""
+    for line in file_contents.split('\n'):
+        cols = line.split(',')
+        r = Row()
+        r.populate(cols)
+        app.logger.debug(type(r))
+        table.rows.append(r)
+    table.save()
 
 ###
 # Routing for your application.
@@ -57,52 +55,52 @@ def home():
     """Render website's home page."""
     return render_template('home.html')
 
+@app.route('/api/v1/tables', methods=['GET'])
+def tables():
+    """ Return a list of Tables
+    Example: /api/vi/tables/?limit=10&offset=20
+    :return:
+    """
+    if request.method == 'GET':
+        limit = int(request.args.get('limit', 10))
+        offset = int(request.args.get('offset', 0))
+        results = Table.objects[offset:offset+limit]
+        app.logger.debug(type(results))
+        return results.to_json()
 
-@app.route('/about/')
-def about():
-    """Render the website's about page."""
-    return render_template('about.html')
+ # @app.route('/upload/', methods=['GET', 'POST'])
+ # def upload():
+ #     if request.method == 'POST':
+ #         file = request.files['file']
+ #         if file:
+ #             filename = secure_filename(file.filename)
+ #             print filename
+ #             contents = file.read()
+ #             t = Table(filename=filename)
+ #             for line in contents.split('\n'):
+ #                 cols = line.split(',')
+ #                 app.logger.debug(cols)
+ #                 r = Row().populate(cols)
+ #                 t.rows.append(r)
 
-
-@app.route('/upload/', methods=['GET', 'POST'])
-def upload():
-    if request.method == 'POST':
-        file = request.files['file']
-        if file:
-            filename = secure_filename(file.filename)
-            print filename
-            contents = file.read()
-            t = Table(filename=filename)
-            for line in contents.split('\n'):
-                cols = line.split(",")
-                r = Row(cols)
-                t.rows.append(r)
-            db_session.add(t)
-            db_session.commit()
-            print(t.id)
-
-            #df = pd.read_csv(file, header=None, sep='\t', error_bad_lines=False)
-            #print(df.shape)
-            #print(df.to_json())
-
-            #TODO Remove hard-coded URL. What is the equivalent of url_for for flask-restless APIs?
-            data_url = 'http://127.0.0.1:5000/api/v1/tables/' + str(t.id)
-            app.logger.debug("requesting " + data_url)
-            # rv is of type requests.models.response
-            rv = requests.get(data_url)
-            # app.logger.debug(type(rv))
-            app.logger.debug(rv.content)
-            app.logger.debug(rv.status_code)
-            app.logger.debug("...done.")
-
-            # CORS seems to make these unnecessary:
-            # resp.headers['Access-Control-Allow-Origin'] = flask.request.headers.get('Origin','*')
-            # resp.headers['Access-Control-Allow-Credentials'] = 'true'
-            # resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
-            # resp.headers['Access-Control-Allow-Headers'] = flask.request.headers.get('Access-Control-Request-Headers', 'Authorization' )
-            # resp.headers['Access-Control-Max-Age'] = '1'
-            app.logger.debug("Returning.")
-            return rv.content
+#             #TODO Remove hard-coded URL. What is the equivalent of url_for for flask-restless APIs?
+#             data_url = 'http://127.0.0.1:5000/api/v1/tables/' + str(t.id)
+#             app.logger.debug("requesting " + data_url)
+#             # rv is of type requests.models.response
+#             rv = requests.get(data_url)
+#             # app.logger.debug(type(rv))
+#             app.logger.debug(rv.content)
+#             app.logger.debug(rv.status_code)
+#             app.logger.debug("...done.")
+#
+#             # CORS seems to make these unnecessary:
+#             # resp.headers['Access-Control-Allow-Origin'] = flask.request.headers.get('Origin','*')
+#             # resp.headers['Access-Control-Allow-Credentials'] = 'true'
+#             # resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+#             # resp.headers['Access-Control-Allow-Headers'] = flask.request.headers.get('Access-Control-Request-Headers', 'Authorization' )
+#             # resp.headers['Access-Control-Max-Age'] = '1'
+#             app.logger.debug("Returning.")
+#             return rv.content
 
 ###
 # The functions below should be applicable to all Flask apps.
