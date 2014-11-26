@@ -1,9 +1,11 @@
 __author__ = 'mfaulk'
 
-from factors.nodes import SourceNode, FactorNode, ReportNode, DirectedEdge
 from collections import defaultdict
 from itertools import chain
-from copy import deepcopy
+from copy import copy
+import json as JSON
+from factors.nodes import SourceNode, FactorNode, ReportNode, DirectedEdge
+
 
 class FactorGraph(object):
 
@@ -39,35 +41,49 @@ class FactorGraph(object):
         return list(chain(*self._edges.values()))
 
     def compute(self):
-        # TODO: recompute the factor graph...
-        pass
+        # TODO: do this efficiently with dirty bits
+        topo_sort = self.topological_sort()
+        for node in topo_sort:
+            print node.name
+
+    def to_json(self):
+        node_ids = list()
+        node_ids.extend(map(lambda n: str(n.id), self.sourceNodes))
+        node_ids.extend(map(lambda n: str(n.id), self.factorNodes))
+        node_ids.extend(map(lambda n: str(n.id), self.reportNodes))
+
+        edge_list = map(lambda e: {'src': str(e.src.id), 'dst': str(e.dest.id)}, self.get_edges())
+
+        temp_dict = dict()
+        temp_dict['nodes'] = node_ids
+        temp_dict['edges'] = edge_list
+        return JSON.dumps(temp_dict)
+
+
 
     def topological_sort(self):
         ''' A topological sorting of the factor graph.
         :return: list of nodes in topological order
         '''
-        edges = deepcopy(self._edges)
+        edges = copy(self._edges)
         topo_sort = list()
         # Set of nodes with no incoming edges
         roots = list()
         roots.extend(self.sourceNodes)
         while roots:
             node = roots.pop()
-
-            print("Evaluating " + node.name)
             topo_sort.append(node)
             out_edges = edges.pop(node.id, list())
             children = map(lambda e: e.dest, out_edges)
             for child in children:
-                print("  Child: " + child.name)
                 # if child has no remaining incoming edges, append it to roots
                 # TODO: do this efficiently
                 is_root = True
                 for edge in list(chain(*edges.values())):
-                    print(type(edge))
                     if(edge.dest == child):
                         is_root = False
                         break
                 if is_root:
                     roots.append(child)
         return topo_sort
+
