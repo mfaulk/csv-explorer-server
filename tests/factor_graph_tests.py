@@ -103,7 +103,7 @@ class TestFactorGraph(unittest.TestCase):
         fg.addEdge(edge_three)
         fg.addEdge(edge_four)
 
-    def test_json(self):
+    def test_graph_json(self):
         src_node_a = SourceNode(table="table", name="Source A")
         src_node_b = SourceNode(table="table", name="Source B")
         factor_node_a = FactorNode("Factor A")
@@ -125,6 +125,21 @@ class TestFactorGraph(unittest.TestCase):
 
         print(fg.to_json())
 
+    def test_node_json(self):
+        src_node_a = SourceNode(table="table", name="Source A")
+        src_node_b = SourceNode(table="table", name="Source B")
+        factor_node_a = FactorNode("Factor A")
+        factor_node_b = FactorNode("Factor B")
+        edge_one = DirectedEdge(src_node_a, factor_node_a)
+        edge_two = DirectedEdge(src_node_b, factor_node_a)
+        edge_three = DirectedEdge(factor_node_a, factor_node_b)
+        edge_four = DirectedEdge(src_node_a, factor_node_b)
+
+        fg = FactorGraph()
+        fg.addSourceNode(src_node_a)
+        fg.addFactorNode(factor_node_a)
+        json = fg.nodes_to_json()
+        print(json)
 
 if __name__ == '__main__':
     unittest.main()

@@ -44,7 +44,8 @@ class FactorGraph(object):
         # TODO: do this efficiently with dirty bits
         topo_sort = self.topological_sort()
         for node in topo_sort:
-            print node.name
+            #print node.name
+            node.compute()
 
     def to_json(self):
         node_ids = list()
@@ -59,6 +60,34 @@ class FactorGraph(object):
         temp_dict['edges'] = edge_list
         return JSON.dumps(temp_dict)
 
+
+    def nodes_to_json(self):
+
+        src_info = list()
+        for node in self.sourceNodes:
+            info = dict()
+            info['id'] = str(node.id)
+            info['name'] = node.name
+            info['type'] = node.__class__.__name__
+            src_info.append(info)
+
+        factor_info = list()
+        for node in self.factorNodes:
+            info = dict()
+            info['id'] = str(node.id)
+            info['name'] = node.name
+            info['type'] = node.__class__.__name__
+            factor_info.append(info)
+
+        report_info = list()
+        for node in self.reportNodes:
+            info = dict()
+            info['id'] = str(node.id)
+            info['name'] = node.name
+            info['type'] = node.__class__.__name__
+            report_info.append(info)
+
+        return JSON.dumps({"sources": src_info, "factors": factor_info, "reports": report_info})
 
 
     def topological_sort(self):
