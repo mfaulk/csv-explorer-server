@@ -1,9 +1,5 @@
 import unittest
-import sys
-import os
-import inspect
 from framework import ext
-import test_extensions
 from test_extensions import sample_factor
 from factors.nodes import FactorNode
 

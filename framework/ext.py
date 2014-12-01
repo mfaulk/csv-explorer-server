@@ -6,7 +6,7 @@ import imp
 import os
 import inspect
 import sys
-from factors.nodes import FactorNode
+
 
 # From a backport of importlib
 def _resolve_name(name, package, level):
