@@ -9,15 +9,7 @@ def get_instance(class_name, extensions_path='framework.extensions'):
     module  = _import_module_in_package('factors.nodes')
     if hasattr(module, class_name):
         class_ = getattr(module, class_name)
-        if class_name == "SourceNode":
-            #TODO: "table" is just a placeholder
-            instance = class_(table="table")
-        elif class_name == "FactorNode":
-            instance = class_()
-        elif class_name == "ReportNode":
-            instance = class_()
-        else:
-            instance = class_()
+        instance = class_()
     else:
         instance = get_instance_from_extensions(class_name, extensions_path)
     return instance

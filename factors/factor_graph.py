@@ -81,7 +81,6 @@ class FactorGraph(object):
         for node in self.sourceNodes:
             info = dict()
             info['id'] = str(node.id)
-            info['name'] = node.name
             info['type'] = node.__class__.__name__
             src_info.append(info)
 
@@ -89,7 +88,6 @@ class FactorGraph(object):
         for node in self.factorNodes:
             info = dict()
             info['id'] = str(node.id)
-            info['name'] = node.name
             info['type'] = node.__class__.__name__
             factor_info.append(info)
 
@@ -97,7 +95,6 @@ class FactorGraph(object):
         for node in self.reportNodes:
             info = dict()
             info['id'] = str(node.id)
-            info['name'] = node.name
             info['type'] = node.__class__.__name__
             report_info.append(info)
 

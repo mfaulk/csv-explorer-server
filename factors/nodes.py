@@ -11,14 +11,18 @@ class SourceNode(Node):
     ''' An initial data source. It may not have parents.
     '''
 
-    def __init__(self, table, name="SourceNode"):
+    def __init__(self):
         '''
-        Init a node for a tabular data source.
-        :param table: Instance of models.Table
+        Init a node for a data source.
         '''
-        self.table = table
-        self.name = name
         super(SourceNode,self).__init__()
+
+    def describe_output_terminals(self):
+        '''
+
+        :return: A dict mapping output terminal names to their data types
+        '''
+        return dict()
 
     def compute(self):
         pass
@@ -28,9 +32,24 @@ class FactorNode(Node):
     ''' A derived data source. This should be an abstract class
     '''
 
-    def __init__(self, name="FactorNode"):
-        self.name = name
+    def __init__(self):
         super(FactorNode,self).__init__()
+
+    def describe_input_terminals(self):
+        '''
+
+        :return: A dict mapping input terminal names to their data types
+        '''
+        return dict()
+
+
+    def describe_output_terminals(self):
+        '''
+
+        :return: A dict mapping output terminal names to their data types
+        '''
+        return dict()
+
 
     def compute(self):
         '''

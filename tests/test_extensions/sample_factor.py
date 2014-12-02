@@ -12,13 +12,9 @@ class SampleFactor (FactorNode):
         PARAMETERS:
     '''
 
-    def __init__(self, name="SampleFactor"):
-        '''
-        :param name:
-        :return:
-        '''
+    def __init__(self):
 
-        super(SampleFactor,self).__init__(name)
+        super(SampleFactor,self).__init__()
 
     def compute(self):
         '''

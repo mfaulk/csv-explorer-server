@@ -8,8 +8,7 @@ import json as JSON
 class TestFactorGraph(unittest.TestCase):
 
     def test_source_node(self):
-        table = "table"
-        source_node = SourceNode(table)
+        source_node = SourceNode()
         source_node.compute()
         #print(source_node.id)
 
@@ -23,7 +22,7 @@ class TestFactorGraph(unittest.TestCase):
     def test_factor_graph_adds(self):
         fg = FactorGraph()
 
-        srcNode = SourceNode('table')
+        srcNode = SourceNode()
         fg.addSourceNode(srcNode)
         self.assertEqual(len(fg.sourceNodes), 1)
 
@@ -75,10 +74,10 @@ class TestFactorGraph(unittest.TestCase):
         self.assertTrue(isinstance(list(fg.factorNodes)[0], SampleFactor))
 
     def test_topo_sort(self):
-        src_node_a = SourceNode(table="table", name="Source A")
-        src_node_b = SourceNode(table="table", name="Source B")
-        factor_node_a = FactorNode("Factor A")
-        factor_node_b = FactorNode("Factor B")
+        src_node_a = SourceNode()
+        src_node_b = SourceNode()
+        factor_node_a = FactorNode()
+        factor_node_b = FactorNode()
         edge_one = DirectedEdge(src_node_a, factor_node_a)
         edge_two = DirectedEdge(src_node_b, factor_node_a)
         edge_three = DirectedEdge(factor_node_a, factor_node_b)
@@ -94,15 +93,15 @@ class TestFactorGraph(unittest.TestCase):
         fg.addEdge(edge_three)
         fg.addEdge(edge_four)
         topo_sort = fg.topological_sort()
-        topo_sort_names = map(lambda node: node.name, topo_sort)
+        topo_sort_ids = map(lambda node: node.id, topo_sort)
         # Assert that there are no duplicates
-        self.assertEqual(len(topo_sort_names), len(set(topo_sort_names)))
+        self.assertEqual(len(topo_sort_ids), len(set(topo_sort_ids)))
 
         # Assert that the ordering respects the ordering implied by each edge
-        self.assertTrue(topo_sort_names.index("Source A") < topo_sort_names.index("Factor A"))
-        self.assertTrue(topo_sort_names.index("Source B") < topo_sort_names.index("Factor A"))
-        self.assertTrue(topo_sort_names.index("Factor A") < topo_sort_names.index("Factor B"))
-        self.assertTrue(topo_sort_names.index("Source A") < topo_sort_names.index("Factor B"))
+        self.assertTrue(topo_sort_ids.index(src_node_a.id) < topo_sort_ids.index(factor_node_a.id))
+        self.assertTrue(topo_sort_ids.index(src_node_b.id)< topo_sort_ids.index(factor_node_a.id))
+        self.assertTrue(topo_sort_ids.index(factor_node_a.id) < topo_sort_ids.index(factor_node_b.id))
+        self.assertTrue(topo_sort_ids.index(src_node_a.id) < topo_sort_ids.index(factor_node_b.id))
 
         # The topological sort should not have changed the Factor Graph structure
         self.assertEqual(len(fg.get_edges()), 4)
@@ -118,10 +117,10 @@ class TestFactorGraph(unittest.TestCase):
         self.assertTrue(factor_node_b in fg.factorNodes)
 
     def test_compute(self):
-        src_node_a = SourceNode(table="table", name="Source A")
-        src_node_b = SourceNode(table="table", name="Source B")
-        factor_node_a = FactorNode("Factor A")
-        factor_node_b = FactorNode("Factor B")
+        src_node_a = SourceNode()
+        src_node_b = SourceNode()
+        factor_node_a = FactorNode()
+        factor_node_b = FactorNode()
         edge_one = DirectedEdge(src_node_a, factor_node_a)
         edge_two = DirectedEdge(src_node_b, factor_node_a)
         edge_three = DirectedEdge(factor_node_a, factor_node_b)
@@ -138,10 +137,10 @@ class TestFactorGraph(unittest.TestCase):
         fg.addEdge(edge_four)
 
     def test_graph_json(self):
-        src_node_a = SourceNode(table="table", name="Source A")
-        src_node_b = SourceNode(table="table", name="Source B")
-        factor_node_a = FactorNode("Factor A")
-        factor_node_b = FactorNode("Factor B")
+        src_node_a = SourceNode()
+        src_node_b = SourceNode()
+        factor_node_a = FactorNode()
+        factor_node_b = FactorNode()
         edge_one = DirectedEdge(src_node_a, factor_node_a)
         edge_two = DirectedEdge(src_node_b, factor_node_a)
         edge_three = DirectedEdge(factor_node_a, factor_node_b)
@@ -167,10 +166,10 @@ class TestFactorGraph(unittest.TestCase):
 
 
     def test_node_json(self):
-        src_node_a = SourceNode(table="table", name="Source A")
-        src_node_b = SourceNode(table="table", name="Source B")
-        factor_node_a = FactorNode("Factor A")
-        factor_node_b = FactorNode("Factor B")
+        src_node_a = SourceNode()
+        src_node_b = SourceNode()
+        factor_node_a = FactorNode()
+        factor_node_b = FactorNode()
         edge_one = DirectedEdge(src_node_a, factor_node_a)
         edge_two = DirectedEdge(src_node_b, factor_node_a)
         edge_three = DirectedEdge(factor_node_a, factor_node_b)

@@ -12,14 +12,9 @@ class AnotherFactor (FactorNode):
         PARAMETERS:
     '''
 
-    def __init__(self, name="AnotherFactor"):
-        '''
+    def __init__(self):
 
-        :param name:
-        :return:
-        '''
-
-        super(AnotherFactor,self).__init__(name)
+        super(AnotherFactor,self).__init__()
 
     def compute(self):
         '''
