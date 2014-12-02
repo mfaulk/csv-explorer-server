@@ -3,6 +3,7 @@ from models import *
 from factors.nodes import SourceNode, FactorNode, ReportNode, DirectedEdge
 from factors.factor_graph import FactorGraph
 from tests.test_extensions.sample_factor import SampleFactor
+import json as JSON
 
 class TestFactorGraph(unittest.TestCase):
 
@@ -10,7 +11,7 @@ class TestFactorGraph(unittest.TestCase):
         table = "table"
         source_node = SourceNode(table)
         source_node.compute()
-        print(source_node.id)
+        #print(source_node.id)
 
     def test_factor_graph_initialization(self):
         fg = FactorGraph()
@@ -156,7 +157,14 @@ class TestFactorGraph(unittest.TestCase):
         fg.addEdge(edge_three)
         fg.addEdge(edge_four)
 
-        print(fg.to_json())
+        data = JSON.loads(fg.to_json())
+        self.assertTrue("nodes" in data)
+        nodes = data['nodes']
+        self.assertEqual(len(nodes), 4)
+        self.assertTrue("edges" in data)
+        edges = data['edges']
+        self.assertEqual(len(edges), 4)
+
 
     def test_node_json(self):
         src_node_a = SourceNode(table="table", name="Source A")
@@ -172,7 +180,10 @@ class TestFactorGraph(unittest.TestCase):
         fg.addSourceNode(src_node_a)
         fg.addFactorNode(factor_node_a)
         json = fg.nodes_to_json()
-        print(json)
+        data = JSON.loads(json)
+        self.assertTrue("sources" in data)
+        self.assertTrue("reports" in data)
+        self.assertTrue("factors" in data)
 
 if __name__ == '__main__':
     unittest.main()

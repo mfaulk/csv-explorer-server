@@ -25,7 +25,6 @@ def get_instance(class_name, extensions_path='framework.extensions'):
 def get_instance_from_extensions(class_name, extensions_path):
     module_name = camel_case_to_lower_case_underscore(class_name)
     module_path = extensions_path + '.' + module_name
-    print("Searching for " + module_path)
     module = _import_module_in_package(module_path)
     class_ = getattr(module, class_name)
     return class_()

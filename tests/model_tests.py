@@ -25,7 +25,6 @@ class TestModels(unittest.TestCase):
         for line in file_contents.split('\n'):
             cols = line.split(',')
             r = Row().populate(cols)
-            print(type(r))
             table.rows.append(cols)
 
         self.assertEqual(len(table.rows),3)
