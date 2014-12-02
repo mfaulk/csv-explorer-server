@@ -2,6 +2,7 @@ import unittest
 from models import *
 from factors.nodes import SourceNode, FactorNode, ReportNode, DirectedEdge
 from factors.factor_graph import FactorGraph
+from tests.test_extensions.sample_factor import SampleFactor
 
 class TestFactorGraph(unittest.TestCase):
 
@@ -39,6 +40,38 @@ class TestFactorGraph(unittest.TestCase):
         self.assertEqual(len(fg.get_edges()), 1)
         fg.addEdge(edge_b)
         self.assertEqual(len(fg.get_edges()), 2)
+
+    def test_add_factor_node_by_class_name(self):
+        fg = FactorGraph()
+        fg.addNode("FactorNode")
+        self.assertEqual(len(fg.factorNodes), 1)
+        self.assertEqual(len(fg.sourceNodes), 0)
+        self.assertEqual(len(fg.reportNodes), 0)
+        self.assertTrue(isinstance(list(fg.factorNodes)[0], FactorNode))
+
+    def test_add_source_node_by_class_name(self):
+        fg = FactorGraph()
+        fg.addNode("SourceNode")
+        self.assertEqual(len(fg.factorNodes), 0)
+        self.assertEqual(len(fg.sourceNodes), 1)
+        self.assertEqual(len(fg.reportNodes), 0)
+        self.assertTrue(isinstance(list(fg.sourceNodes)[0], SourceNode))
+
+    def test_add_report_node_by_class_name(self):
+        fg = FactorGraph()
+        fg.addNode("ReportNode")
+        self.assertEqual(len(fg.factorNodes), 0)
+        self.assertEqual(len(fg.sourceNodes), 0)
+        self.assertEqual(len(fg.reportNodes), 1)
+        self.assertTrue(isinstance(list(fg.reportNodes)[0], ReportNode))
+
+    def tests_add_node_by_class_name_from_extensions(self):
+        fg = FactorGraph()
+        fg.addNode("SampleFactor", extensions_path='tests.test_extensions')
+        self.assertEqual(len(fg.factorNodes), 1)
+        self.assertEqual(len(fg.sourceNodes), 0)
+        self.assertEqual(len(fg.reportNodes), 0)
+        self.assertTrue(isinstance(list(fg.factorNodes)[0], SampleFactor))
 
     def test_topo_sort(self):
         src_node_a = SourceNode(table="table", name="Source A")

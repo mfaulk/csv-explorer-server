@@ -1,4 +1,10 @@
 def get_instance(class_name, extensions_path='framework.extensions'):
+    '''
+    Obtain an instance of a Factor Graph node by class name.
+    :param class_name:
+    :param extensions_path:
+    :return: Instance of class, or None
+    '''
     instance = None
     module  = _import_module_in_package('factors.nodes')
     if hasattr(module, class_name):
@@ -10,9 +16,10 @@ def get_instance(class_name, extensions_path='framework.extensions'):
             instance = class_()
         elif class_name == "ReportNode":
             instance = class_()
+        else:
+            instance = class_()
     else:
         instance = get_instance_from_extensions(class_name, extensions_path)
-
     return instance
 
 def get_instance_from_extensions(class_name, extensions_path):

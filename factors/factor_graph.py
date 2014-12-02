@@ -4,7 +4,8 @@ from collections import defaultdict
 from itertools import chain
 from copy import copy
 import json as JSON
-from factors.nodes import SourceNode, FactorNode, ReportNode, DirectedEdge
+from factors.nodes import Node, SourceNode, FactorNode, ReportNode, DirectedEdge
+import factors.node_factory
 
 
 class FactorGraph(object):
@@ -15,6 +16,19 @@ class FactorGraph(object):
         self.reportNodes = set()
         # _edges[node.id] contains a list of edges directed out from node
         self._edges = defaultdict(list)
+
+    def addNode(self, class_name, extensions_path="framework.extensions"):
+        node = factors.node_factory.get_instance(class_name, extensions_path)
+        assert isinstance(node, Node)
+        if isinstance(node, SourceNode):
+            self.sourceNodes.add(node)
+        elif isinstance(node, FactorNode):
+            self.factorNodes.add(node)
+        elif isinstance(node, ReportNode):
+            self.reportNodes.add(node)
+        else:
+            print("Unknown node type " + node.__class__)
+        self.compute()
 
     def addSourceNode(self, srcNode):
         assert isinstance(srcNode, SourceNode)
