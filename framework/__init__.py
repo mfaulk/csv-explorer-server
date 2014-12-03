@@ -112,12 +112,12 @@ def get_factor_extensions():
     for module_name in module_names:
         module = import_module(module_name)
         for klass in subclasses_in_module(base_class, module):
-            print klass.__name__
-    #         # TODO: parse docstring to extract input/output data types and parameters
-    #         docstring = ""
-    #         if klass.__doc__:
-    #             docstring = klass.__doc__
-    #         klass_info = {'name': klass.__name__, 'module': module_name, 'docstring': docstring}
-    #         info.append(klass_info)
+            class_name = klass.__name__
+            input_terminals = klass.describe_input_terminals()
+            #print(input_terminals)
+            output_terminals = klass.describe_output_terminals()
+            #print(output_terminals)
+            class_info = {'class_name': class_name, 'in': input_terminals, 'out': output_terminals}
+            info.append(class_info)
     sys.path = _initial_path
-    # return info
+    return info

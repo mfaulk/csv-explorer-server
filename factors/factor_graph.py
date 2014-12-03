@@ -11,9 +11,9 @@ import factors.node_factory
 class FactorGraph(object):
 
     def __init__(self):
-        self.sourceNodes = set()
-        self.factorNodes = set()
-        self.reportNodes = set()
+        self.sourceNodes = dict()
+        self.factorNodes = dict()
+        self.reportNodes = dict()
         # _edges[node.id] contains a list of edges directed out from node
         self._edges = defaultdict(list)
 
@@ -21,28 +21,29 @@ class FactorGraph(object):
         node = factors.node_factory.get_instance(class_name, extensions_path)
         assert isinstance(node, Node)
         if isinstance(node, SourceNode):
-            self.sourceNodes.add(node)
+            self.sourceNodes[node.id] = node
         elif isinstance(node, FactorNode):
-            self.factorNodes.add(node)
+            self.factorNodes[node.id] = node
         elif isinstance(node, ReportNode):
-            self.reportNodes.add(node)
+            self.reportNodes[node.id] = node
         else:
             print("Unknown node type " + node.__class__)
         self.compute()
+        return node.id
 
     def addSourceNode(self, srcNode):
         assert isinstance(srcNode, SourceNode)
-        self.sourceNodes.add(srcNode)
+        self.sourceNodes[srcNode.id] = srcNode
         self.compute()
 
     def addFactorNode(self, factorNode):
         assert isinstance(factorNode, FactorNode)
-        self.factorNodes.add(factorNode)
+        self.factorNodes[factorNode.id] = factorNode
         self.compute()
 
     def addReportNode(self, reportNode):
         assert isinstance(reportNode, ReportNode)
-        self.reportNodes.add(reportNode)
+        self.reportNodes[reportNode.id] = reportNode
         self.compute()
 
     def addEdge(self, edge):
@@ -50,6 +51,14 @@ class FactorGraph(object):
         assert(not isinstance(edge.dest, SourceNode))
         self._edges[edge.src.id].append(edge)
         self.compute()
+
+    def createEdge(self, src_uri, dest_uri):
+        # validate uris: valid nodes, valid terminals, valid input/output
+        src_id = Node.id_from_uri(src_uri)
+        src_terminal = Node.terminal_name_from_uri(src_uri)
+        dest_id = Node.id_from_uri(dest_uri)
+        dest_terminal = Node.terminal_name_from_uri(dest_uri)
+        pass
 
     def get_edges(self):
         return list(chain(*self._edges.values()))
@@ -63,9 +72,9 @@ class FactorGraph(object):
 
     def to_json(self):
         node_ids = list()
-        node_ids.extend(map(lambda n: str(n.id), self.sourceNodes))
-        node_ids.extend(map(lambda n: str(n.id), self.factorNodes))
-        node_ids.extend(map(lambda n: str(n.id), self.reportNodes))
+        node_ids.extend(map(lambda n: str(n.id), self.sourceNodes.values()))
+        node_ids.extend(map(lambda n: str(n.id), self.factorNodes.values()))
+        node_ids.extend(map(lambda n: str(n.id), self.reportNodes.values()))
 
         edge_list = map(lambda e: {'src': str(e.src.id), 'dst': str(e.dest.id)}, self.get_edges())
 
@@ -78,21 +87,21 @@ class FactorGraph(object):
     def nodes_to_json(self):
 
         src_info = list()
-        for node in self.sourceNodes:
+        for node in self.sourceNodes.values():
             info = dict()
             info['id'] = str(node.id)
             info['type'] = node.__class__.__name__
             src_info.append(info)
 
         factor_info = list()
-        for node in self.factorNodes:
+        for node in self.factorNodes.values():
             info = dict()
             info['id'] = str(node.id)
             info['type'] = node.__class__.__name__
             factor_info.append(info)
 
         report_info = list()
-        for node in self.reportNodes:
+        for node in self.reportNodes.values():
             info = dict()
             info['id'] = str(node.id)
             info['type'] = node.__class__.__name__
@@ -109,7 +118,7 @@ class FactorGraph(object):
         topo_sort = list()
         # Set of nodes with no incoming edges
         roots = list()
-        roots.extend(self.sourceNodes)
+        roots.extend(self.sourceNodes.values())
         while roots:
             node = roots.pop()
             topo_sort.append(node)

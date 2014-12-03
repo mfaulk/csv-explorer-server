@@ -44,34 +44,34 @@ class TestFactorGraph(unittest.TestCase):
     def test_add_factor_node_by_class_name(self):
         fg = FactorGraph()
         fg.addNode("FactorNode")
-        self.assertEqual(len(fg.factorNodes), 1)
-        self.assertEqual(len(fg.sourceNodes), 0)
-        self.assertEqual(len(fg.reportNodes), 0)
-        self.assertTrue(isinstance(list(fg.factorNodes)[0], FactorNode))
+        self.assertEqual(len(fg.factorNodes.values()), 1)
+        self.assertEqual(len(fg.sourceNodes.values()), 0)
+        self.assertEqual(len(fg.reportNodes.values()), 0)
+        self.assertTrue(isinstance(list(fg.factorNodes.values())[0], FactorNode))
 
     def test_add_source_node_by_class_name(self):
         fg = FactorGraph()
         fg.addNode("SourceNode")
-        self.assertEqual(len(fg.factorNodes), 0)
-        self.assertEqual(len(fg.sourceNodes), 1)
-        self.assertEqual(len(fg.reportNodes), 0)
-        self.assertTrue(isinstance(list(fg.sourceNodes)[0], SourceNode))
+        self.assertEqual(len(fg.factorNodes.values()), 0)
+        self.assertEqual(len(fg.sourceNodes.values()), 1)
+        self.assertEqual(len(fg.reportNodes.values()), 0)
+        self.assertTrue(isinstance(list(fg.sourceNodes.values())[0], SourceNode))
 
     def test_add_report_node_by_class_name(self):
         fg = FactorGraph()
         fg.addNode("ReportNode")
-        self.assertEqual(len(fg.factorNodes), 0)
-        self.assertEqual(len(fg.sourceNodes), 0)
-        self.assertEqual(len(fg.reportNodes), 1)
-        self.assertTrue(isinstance(list(fg.reportNodes)[0], ReportNode))
+        self.assertEqual(len(fg.factorNodes.values()), 0)
+        self.assertEqual(len(fg.sourceNodes.values()), 0)
+        self.assertEqual(len(fg.reportNodes.values()), 1)
+        self.assertTrue(isinstance(list(fg.reportNodes.values())[0], ReportNode))
 
     def tests_add_node_by_class_name_from_extensions(self):
         fg = FactorGraph()
         fg.addNode("SampleFactor", extensions_path='tests.test_extensions')
-        self.assertEqual(len(fg.factorNodes), 1)
-        self.assertEqual(len(fg.sourceNodes), 0)
-        self.assertEqual(len(fg.reportNodes), 0)
-        self.assertTrue(isinstance(list(fg.factorNodes)[0], SampleFactor))
+        self.assertEqual(len(fg.factorNodes.values()), 1)
+        self.assertEqual(len(fg.sourceNodes.values()), 0)
+        self.assertEqual(len(fg.reportNodes.values()), 0)
+        self.assertTrue(isinstance(list(fg.factorNodes.values())[0], SampleFactor))
 
     def test_topo_sort(self):
         src_node_a = SourceNode()
@@ -110,11 +110,11 @@ class TestFactorGraph(unittest.TestCase):
         self.assertTrue(edge_three in fg.get_edges())
         self.assertTrue(edge_four in fg.get_edges())
         self.assertEqual(len(fg.sourceNodes), 2)
-        self.assertTrue(src_node_a in fg.sourceNodes)
-        self.assertTrue(src_node_b in fg.sourceNodes)
+        self.assertTrue(src_node_a in fg.sourceNodes.values())
+        self.assertTrue(src_node_b in fg.sourceNodes.values())
         self.assertEqual(len(fg.factorNodes), 2)
-        self.assertTrue(factor_node_a in fg.factorNodes)
-        self.assertTrue(factor_node_b in fg.factorNodes)
+        self.assertTrue(factor_node_a in fg.factorNodes.values())
+        self.assertTrue(factor_node_b in fg.factorNodes.values())
 
     def test_compute(self):
         src_node_a = SourceNode()
