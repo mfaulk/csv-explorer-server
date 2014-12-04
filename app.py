@@ -15,12 +15,13 @@ from bson.objectid import ObjectId
 from mongoengine import connect
 from models import Table, Row, Cell
 
-ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 app = Flask(__name__)
 app.debug=True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
 cors = CORS(app, resources={r'/*' : {"origins":"*"}})
+
+ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 MONGO_DATABASE_NAME = 'memex'
 connect(MONGO_DATABASE_NAME)
@@ -97,19 +98,6 @@ def upload():
             app.logger.debug("No file provided to /upload/")
     else:
         app.logger.debug("Unimplemented /upload/ request method: " + request.method)
-
-
-
-###
-# The functions below should be applicable to all Flask apps.
-###
-
-@app.route('/<file_name>.txt')
-def send_text_file(file_name):
-    """Send your static text file."""
-    file_dot_text = file_name + '.txt'
-    return app.send_static_file(file_dot_text)
-
 
 @app.after_request
 def add_header(response):
