@@ -110,18 +110,6 @@ class ReportNode(Node):
         pass
 
 
-class DirectedEdge(object):
-    ''' A directed edge between two Nodes.
-    '''
-
-    def __init__(self, src, dest):
-        '''
-        :param srcNode: instance of Node
-        :param destNode: instance of Node
-        '''
-        self.src = src
-        self.dest = dest
-
 class TerminalEdge(object):
 
     def __init__(self, src_uri, dest_uri):

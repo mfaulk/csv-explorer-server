@@ -1,188 +1,99 @@
 import unittest
-from models import *
-from factors.nodes import SourceNode, FactorNode, ReportNode, DirectedEdge
 from factors.factor_graph import FactorGraph
-from tests.test_extensions.sample_factor import SampleFactor
-import json as JSON
+from factors.nodes import TerminalEdge as DirectedEdge
 
-class TestFactorGraph(unittest.TestCase):
+class TerminalGraphTests(unittest.TestCase):
 
-    def test_source_node(self):
-        source_node = SourceNode()
-        source_node.compute()
-        #print(source_node.id)
+    def setUp(self):
+        self.graph = FactorGraph()
 
-    def test_factor_graph_initialization(self):
-        fg = FactorGraph()
-        self.assertEqual(len(fg.get_edges()), 0)
-        self.assertEqual(len(fg.factorNodes), 0)
-        self.assertEqual(len(fg.sourceNodes), 0)
-        self.assertEqual(len(fg.reportNodes), 0)
+    def test_initialization(self):
+        self.assertEqual(len(self.graph._nodes.values()),0)
+        self.assertEqual(len(self.graph._edges.values()),0)
 
-    def test_factor_graph_adds(self):
-        fg = FactorGraph()
+    def test_add_node(self):
+        self.graph.addNode("IdentityFactor")
+        self.assertEqual(len(self.graph._nodes.values()),1)
+        self.graph.addNode("SourceNode")
+        self.assertEqual(len(self.graph._nodes.values()),2)
 
-        srcNode = SourceNode()
-        fg.addSourceNode(srcNode)
-        self.assertEqual(len(fg.sourceNodes), 1)
+    def test_add_delete_edge(self):
+        node_a_id = self.graph.addNode("SourceNode")
+        node_b_id = self.graph.addNode("IdentityFactor")
+        src_uri = "node://" + node_a_id + '/' + 'TERMINAL'
+        dest_uri = "node://" + node_b_id + '/' + 'INPUT'
+        self.graph.addEdge(src_uri, dest_uri)
+        self.assertEqual(len(self.graph._edges[node_a_id]), 1)
+        self.assertEqual(len(self.graph._edges[node_b_id]), 1)
 
-        factorNode = FactorNode()
-        fg.addFactorNode(factorNode)
-        self.assertEqual(len(fg.factorNodes), 1)
+        edge = DirectedEdge(src_uri, dest_uri)
+        self.graph.deleteEdge(edge)
+        self.assertEqual(len(self.graph._edges[node_a_id]), 0)
+        self.assertEqual(len(self.graph._edges[node_b_id]), 0)
 
-        reportNode = ReportNode()
-        fg.addReportNode(reportNode)
-        self.assertEqual(len(fg.reportNodes), 1)
+    def test_delete_node(self):
+        node_a_id = self.graph.addNode("SourceNode")
+        node_b_id = self.graph.addNode("IdentityFactor")
+        src_uri = "node://" + node_a_id + '/' + 'TERMINAL'
+        dest_uri = "node://" + node_b_id + '/' + 'INPUT'
+        self.graph.addEdge(src_uri, dest_uri)
+        self.assertEqual(len(self.graph._edges[node_a_id]), 1)
+        self.assertEqual(len(self.graph._edges[node_b_id]), 1)
 
-        edge_a = DirectedEdge(srcNode, factorNode)
-        edge_b = DirectedEdge(factorNode, reportNode)
-        fg.addEdge(edge_a)
-        self.assertEqual(len(fg.get_edges()), 1)
-        fg.addEdge(edge_b)
-        self.assertEqual(len(fg.get_edges()), 2)
+        self.graph.deleteNode(node_a_id)
+        self.assertFalse(node_a_id in self.graph._nodes)
+        self.assertEqual(len(self.graph._edges[node_a_id]), 0)
+        self.assertEqual(len(self.graph._edges[node_b_id]), 0)
 
-    def test_add_factor_node_by_class_name(self):
-        fg = FactorGraph()
-        fg.addNode("FactorNode")
-        self.assertEqual(len(fg.factorNodes.values()), 1)
-        self.assertEqual(len(fg.sourceNodes.values()), 0)
-        self.assertEqual(len(fg.reportNodes.values()), 0)
-        self.assertTrue(isinstance(list(fg.factorNodes.values())[0], FactorNode))
+    def test_topo_sort_minimal(self):
+        node_a_id = self.graph.addNode("SourceNode")
+        sorted = self.graph.topological_sort(self.graph._nodes, self.graph._edges)
+        self.assertEqual(len(sorted), 1)
+        self.assertTrue(node_a_id in sorted)
 
-    def test_add_source_node_by_class_name(self):
-        fg = FactorGraph()
-        fg.addNode("SourceNode")
-        self.assertEqual(len(fg.factorNodes.values()), 0)
-        self.assertEqual(len(fg.sourceNodes.values()), 1)
-        self.assertEqual(len(fg.reportNodes.values()), 0)
-        self.assertTrue(isinstance(list(fg.sourceNodes.values())[0], SourceNode))
+    def test_sort_small(self):
+        source_a_id = self.graph.addNode("SourceNode")
+        node_b_id = self.graph.addNode("IdentityFactor")
+        node_c_id = self.graph.addNode("IdentityFactor")
 
-    def test_add_report_node_by_class_name(self):
-        fg = FactorGraph()
-        fg.addNode("ReportNode")
-        self.assertEqual(len(fg.factorNodes.values()), 0)
-        self.assertEqual(len(fg.sourceNodes.values()), 0)
-        self.assertEqual(len(fg.reportNodes.values()), 1)
-        self.assertTrue(isinstance(list(fg.reportNodes.values())[0], ReportNode))
+        self.graph.addEdge("node://" + source_a_id + '/' + 'TERMINAL', "node://" + node_b_id + '/' + 'INPUT')
+        self.graph.addEdge("node://" + node_b_id + '/' + 'OUTPUT', "node://" + node_c_id + '/' + 'INPUT')
 
-    def tests_add_node_by_class_name_from_extensions(self):
-        fg = FactorGraph()
-        fg.addNode("SampleFactor", extensions_path='tests.test_extensions')
-        self.assertEqual(len(fg.factorNodes.values()), 1)
-        self.assertEqual(len(fg.sourceNodes.values()), 0)
-        self.assertEqual(len(fg.reportNodes.values()), 0)
-        self.assertTrue(isinstance(list(fg.factorNodes.values())[0], SampleFactor))
+        sorted = self.graph.topological_sort(self.graph._nodes, self.graph._edges)
+        self.assertEqual(len(sorted), 3)
+        self.assertEqual(source_a_id, sorted[0])
+        self.assertEqual(node_b_id, sorted[1])
+        self.assertEqual(node_c_id, sorted[2])
 
-    def test_topo_sort(self):
-        src_node_a = SourceNode()
-        src_node_b = SourceNode()
-        factor_node_a = FactorNode()
-        factor_node_b = FactorNode()
-        edge_one = DirectedEdge(src_node_a, factor_node_a)
-        edge_two = DirectedEdge(src_node_b, factor_node_a)
-        edge_three = DirectedEdge(factor_node_a, factor_node_b)
-        edge_four = DirectedEdge(src_node_a, factor_node_b)
+    def test_sort_medium(self):
+        source_a_id = self.graph.addNode("SourceNode")
+        source_b_id = self.graph.addNode("SourceNode")
 
-        fg = FactorGraph()
-        fg.addSourceNode(src_node_a)
-        fg.addFactorNode(factor_node_a)
-        fg.addSourceNode(src_node_b)
-        fg.addFactorNode(factor_node_b)
-        fg.addEdge(edge_one)
-        fg.addEdge(edge_two)
-        fg.addEdge(edge_three)
-        fg.addEdge(edge_four)
-        topo_sort = fg.topological_sort()
-        topo_sort_ids = map(lambda node: node.id, topo_sort)
-        # Assert that there are no duplicates
-        self.assertEqual(len(topo_sort_ids), len(set(topo_sort_ids)))
+        node_a_id = self.graph.addNode("IdentityFactor")
+        node_b_id = self.graph.addNode("IdentityFactor")
+        node_c_id = self.graph.addNode("IdentityFactor")
 
-        # Assert that the ordering respects the ordering implied by each edge
-        self.assertTrue(topo_sort_ids.index(src_node_a.id) < topo_sort_ids.index(factor_node_a.id))
-        self.assertTrue(topo_sort_ids.index(src_node_b.id)< topo_sort_ids.index(factor_node_a.id))
-        self.assertTrue(topo_sort_ids.index(factor_node_a.id) < topo_sort_ids.index(factor_node_b.id))
-        self.assertTrue(topo_sort_ids.index(src_node_a.id) < topo_sort_ids.index(factor_node_b.id))
+        # Source A ---> Node A
+        self.graph.addEdge("node://" + source_a_id + '/' + 'TERMINAL', "node://" + node_a_id + '/' + 'INPUT')
 
-        # The topological sort should not have changed the Factor Graph structure
-        self.assertEqual(len(fg.get_edges()), 4)
-        self.assertTrue(edge_one in fg.get_edges())
-        self.assertTrue(edge_two in fg.get_edges())
-        self.assertTrue(edge_three in fg.get_edges())
-        self.assertTrue(edge_four in fg.get_edges())
-        self.assertEqual(len(fg.sourceNodes), 2)
-        self.assertTrue(src_node_a in fg.sourceNodes.values())
-        self.assertTrue(src_node_b in fg.sourceNodes.values())
-        self.assertEqual(len(fg.factorNodes), 2)
-        self.assertTrue(factor_node_a in fg.factorNodes.values())
-        self.assertTrue(factor_node_b in fg.factorNodes.values())
+        # Source A ---> Node B
+        self.graph.addEdge("node://" + source_a_id + '/' + 'TERMINAL', "node://" + node_b_id + '/' + 'INPUT')
 
-    def test_compute(self):
-        src_node_a = SourceNode()
-        src_node_b = SourceNode()
-        factor_node_a = FactorNode()
-        factor_node_b = FactorNode()
-        edge_one = DirectedEdge(src_node_a, factor_node_a)
-        edge_two = DirectedEdge(src_node_b, factor_node_a)
-        edge_three = DirectedEdge(factor_node_a, factor_node_b)
-        edge_four = DirectedEdge(src_node_a, factor_node_b)
+        # Source B ---> Node A
+        self.graph.addEdge("node://" + source_b_id + '/' + 'TERMINAL', "node://" + node_a_id + '/' + 'INPUT')
 
-        fg = FactorGraph()
-        fg.addSourceNode(src_node_a)
-        fg.addFactorNode(factor_node_a)
-        fg.addSourceNode(src_node_b)
-        fg.addFactorNode(factor_node_b)
-        fg.addEdge(edge_one)
-        fg.addEdge(edge_two)
-        fg.addEdge(edge_three)
-        fg.addEdge(edge_four)
+        # Node B ---> Node C
+        self.graph.addEdge("node://" + node_b_id + '/' + 'OUTPUT', "node://" + node_c_id + '/' + 'INPUT')
 
-    def test_graph_json(self):
-        src_node_a = SourceNode()
-        src_node_b = SourceNode()
-        factor_node_a = FactorNode()
-        factor_node_b = FactorNode()
-        edge_one = DirectedEdge(src_node_a, factor_node_a)
-        edge_two = DirectedEdge(src_node_b, factor_node_a)
-        edge_three = DirectedEdge(factor_node_a, factor_node_b)
-        edge_four = DirectedEdge(src_node_a, factor_node_b)
+        sorted = self.graph.topological_sort(self.graph._nodes, self.graph._edges)
+        self.assertEqual(len(sorted), 5)
 
-        fg = FactorGraph()
-        fg.addSourceNode(src_node_a)
-        fg.addFactorNode(factor_node_a)
-        fg.addSourceNode(src_node_b)
-        fg.addFactorNode(factor_node_b)
-        fg.addEdge(edge_one)
-        fg.addEdge(edge_two)
-        fg.addEdge(edge_three)
-        fg.addEdge(edge_four)
+        # Test that the ordering respects the ordering implied by each edge
+        self.assertTrue(sorted.index(source_a_id) < sorted.index(node_a_id))
+        self.assertTrue(sorted.index(source_a_id) < sorted.index(node_b_id))
+        self.assertTrue(sorted.index(source_b_id) < sorted.index(node_a_id))
+        self.assertTrue(sorted.index(node_b_id) < sorted.index(node_c_id))
 
-        data = JSON.loads(fg.to_json())
-        self.assertTrue("nodes" in data)
-        nodes = data['nodes']
-        self.assertEqual(len(nodes), 4)
-        self.assertTrue("edges" in data)
-        edges = data['edges']
-        self.assertEqual(len(edges), 4)
-
-
-    def test_node_json(self):
-        src_node_a = SourceNode()
-        src_node_b = SourceNode()
-        factor_node_a = FactorNode()
-        factor_node_b = FactorNode()
-        edge_one = DirectedEdge(src_node_a, factor_node_a)
-        edge_two = DirectedEdge(src_node_b, factor_node_a)
-        edge_three = DirectedEdge(factor_node_a, factor_node_b)
-        edge_four = DirectedEdge(src_node_a, factor_node_b)
-
-        fg = FactorGraph()
-        fg.addSourceNode(src_node_a)
-        fg.addFactorNode(factor_node_a)
-        json = fg.nodes_to_json()
-        data = JSON.loads(json)
-        self.assertTrue("sources" in data)
-        self.assertTrue("reports" in data)
-        self.assertTrue("factors" in data)
 
 if __name__ == '__main__':
     unittest.main()
