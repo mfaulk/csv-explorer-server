@@ -27,7 +27,7 @@ class TestModels(unittest.TestCase):
     def test_get_factor_info(self):
         info = get_factor_extensions()
         # TODO: define the structure for this info
-        print(info)
+        # print(info)
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,96 +3,52 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, Response, make_response, abort
 from flask.ext.cors import CORS
 import json
-from mongoengine import connect
-from models import Table, Row, Cell
 from factors.factor_graph import FactorGraph
 from framework import get_factor_extensions
 
 
 app = Flask(__name__)
 app.debug=True
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'this_should_be_configured')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'too_many_secrets')
 cors = CORS(app, resources={r'/*' : {"origins":"*"}})
 
 ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
-MONGO_DATABASE_NAME = 'memex'
-connect(MONGO_DATABASE_NAME)
 
 factor_graph = FactorGraph()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-
-def insert_test_table():
-    file_name = "the_file_name.csv"
-    table = Table(file_name).save()
-
-    file_contents = """ headerA,headerB,headerC,headerD
-                    aaa,bbb,cc,ddddd
-                    1,2,44,10"""
-    for line in file_contents.split('\n'):
-        cols = line.split(',')
-        r = Row()
-        r.populate(cols)
-        app.logger.debug(type(r))
-        table.rows.append(r)
-    table.save()
-
-###
-# Routing for your application.
-###
-
 @app.route('/')
 def home():
     """Render website's home page."""
     return render_template('home.html')
 
-@app.route('/api/v1/tables', methods=['GET'])
-def tables():
-    """ Return a list of Tables
-    Example: /api/vi/tables/?limit=10&offset=20
-    :return:
-    """
-    if request.method == 'GET':
-        limit = int(request.args.get('limit', 10))
-        offset = int(request.args.get('offset', 0))
-        results = Table.objects[offset:offset+limit]
-        app.logger.debug(type(results))
-        return results.to_json()
-
-@app.route('/api/v1/table/<table_id>', methods=['GET'])
-def table(table_id):
-    if request.method == 'GET':
-        result = Table.objects.get(id=table_id)
-        return result.to_json()
-
-
-@app.route('/upload/', methods=['POST'])
-def upload():
-    if request.method == 'POST':
-        file = request.files['file']
-        if file:
-            #filename = secure_filename(file.filename)
-            file_name = file.filename
-            app.logger.debug("Received " + file_name)
-            contents = file.read()
-            table = Table(file_name=file_name)
-            for line in contents.split('\n'):
-                cols = line.split(',')
-                app.logger.debug(cols)
-                r = Row()
-                r.populate(cols)
-                table.rows.append(r)
-            table.save()
-            json_val = table.to_json()
-            app.logger.debug(json_val)
-            return table.to_json()
-        else:
-            app.logger.debug("No file provided to /upload/")
-    else:
-        app.logger.debug("Unimplemented /upload/ request method: " + request.method)
+# @app.route('/upload/', methods=['POST'])
+# def upload():
+#     if request.method == 'POST':
+#         file = request.files['file']
+#         if file:
+#             #filename = secure_filename(file.filename)
+#             file_name = file.filename
+#             app.logger.debug("Received " + file_name)
+#             contents = file.read()
+#             table = Table(file_name=file_name)
+#             for line in contents.split('\n'):
+#                 cols = line.split(',')
+#                 app.logger.debug(cols)
+#                 r = Row()
+#                 r.populate(cols)
+#                 table.rows.append(r)
+#             table.save()
+#             json_val = table.to_json()
+#             app.logger.debug(json_val)
+#             return table.to_json()
+#         else:
+#             app.logger.debug("No file provided to /upload/")
+#     else:
+#         app.logger.debug("Unimplemented /upload/ request method: " + request.method)
 
 
 ###
@@ -130,13 +86,6 @@ def nodes():
         else:
             # Unsupported content type.
             return Response(status=400)
-
-        # if not request.json or not 'node_type' in request.json:
-        #     abort(400)
-        # else:
-        #     node_type = request.json['node_type']
-        #     node_id = factor_graph.addNode(node_type)
-        #     return node_id
 
 @app.route('/api/v1/graph/node/<node_id>', methods=['GET', 'DELETE'])
 def node(node_id):
