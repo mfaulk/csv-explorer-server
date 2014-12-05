@@ -15,8 +15,10 @@ class FactorGraph(object):
         # Mapping from node ID to its incident edges
         self._edges = defaultdict(list)
 
+        self._edges_by_id = dict()
 
-    def addNode(self, class_name, extensions_path="framework.extensions"):
+
+    def add_node(self, class_name, extensions_path="framework.extensions"):
         '''
         :param class_name:
         :param extensions_path:
@@ -28,28 +30,40 @@ class FactorGraph(object):
         #self.compute()
         return node.id
 
-    def deleteNode(self, node_id):
+    def delete_node(self, node_id):
         self._nodes.pop(node_id, None)
         # delete all edges incident on this node
         edges = self._edges.pop(node_id, list())
         for edge in edges:
-            self.deleteEdge(edge)
+            self.delete_edge(edge)
 
 
-    def addEdge(self, src_uri, dest_uri):
+    def add_edge(self, src_uri, dest_uri):
         src_id = Node.id_from_uri(src_uri)
         dest_id = Node.id_from_uri(dest_uri)
+        edge_id = None
         if src_id in self._nodes and dest_id in self._nodes:
             edge = TerminalEdge(src_uri, dest_uri)
             self._edges[src_id].append(edge)
             self._edges[dest_id].append(edge)
+            self._edges_by_id[edge.id] = edge
+            edge_id = edge.id
         else:
             print("Unknown node(s). src_id: " + src_id + ", dest_id: " + dest_id)
+        return edge_id
 
-    def deleteEdge(self, edge):
-        #src_id = Node.id_from_uri(edge.src)
+    def delete_edge_by_id(self, edge_id):
+        if edge_id in self._edges_by_id:
+            edge = self._edges_by_id.pop(edge_id)
+            self.delete_edge(edge)
+
+    # def delete_edge_by_uri(self, src_uri, dest_uri):
+    #     edge = TerminalEdge(src_uri, dest_uri)
+    #     self.delete_edge(edge)
+    #     return edge.id
+
+    def delete_edge(self, edge):
         src_id = edge.src_id
-        #dest_id = Node.id_from_uri(edge.dest)
         dest_id = edge.dest_id
         if edge in self._edges[src_id]:
             self._edges[src_id].remove(edge)
@@ -58,6 +72,12 @@ class FactorGraph(object):
 
     def get_edges(self):
         return set(chain(*self._edges.values()))
+
+    def get_edge(self, edge_id):
+        edge = None
+        if edge_id in self._edges_by_id:
+            edge = self._edges_by_id[edge_id]
+        return edge
 
     @staticmethod
     def _children(parent_id, edges):
@@ -82,9 +102,10 @@ class FactorGraph(object):
         temp_dict['edges'] = edge_list
         return JSON.dumps(temp_dict)
 
-    def nodes_to_json(self):
-        data = list()
-        for node in self._nodes.values():
+    def _describe_node(self, node_id):
+        info = dict()
+        if node_id in self._nodes:
+            node = self._nodes[node_id]
             info = dict()
             info['id'] = str(node.id)
             info['type'] = node.__class__.__name__
@@ -97,9 +118,19 @@ class FactorGraph(object):
                 info['inputs'] = node.describe_input_terminals()
             else:
                 print(self.__class__.__name__ + ": Unknown node type " + node.__class__.__name__)
+        return info
+
+    def nodes_to_json(self):
+        data = list()
+        for node_id in self._nodes.keys():
+            info = self._describe_node(node_id)
             data.append(info)
 
         return JSON.dumps({"nodes": data})
+
+    def node_to_json(self, node_id):
+        info = self._describe_node(node_id)
+        return JSON.dumps(info)
 
     @staticmethod
     def topological_sort(nodes, edges):

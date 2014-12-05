@@ -105,7 +105,9 @@ def subclasses_in_package(base_class, package_name):
 def get_factor_extensions():
     info = []
     base_class = FactorNode
-    extensions_path = extensions.__path__.pop()
+    # This locates the extensions by getting the directory of the current file.
+    extensions_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'extensions')
+    #extensions_path = extensions.__path__.pop()
     module_names = set([os.path.splitext(module)[0] for module in os.listdir(extensions_path) if module.endswith('.py')])
     _initial_path = sys.path
     sys.path.append(extensions_path)

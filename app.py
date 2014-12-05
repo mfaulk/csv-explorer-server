@@ -8,12 +8,15 @@ This file creates your application.
 
 import os
 import requests
-from flask import Flask, render_template, request, redirect, url_for, Response, make_response
+from flask import Flask, render_template, request, redirect, url_for, Response, make_response, abort
 from flask.ext.cors import CORS
+import json
 from bson import json_util
 from bson.objectid import ObjectId
 from mongoengine import connect
 from models import Table, Row, Cell
+from factors.factor_graph import FactorGraph
+from framework import get_factor_extensions
 
 
 app = Flask(__name__)
@@ -25,6 +28,8 @@ ALLOWED_EXTENSIONS = set(['txt', 'csv'])
 
 MONGO_DATABASE_NAME = 'memex'
 connect(MONGO_DATABASE_NAME)
+
+factor_graph = FactorGraph()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
@@ -98,6 +103,90 @@ def upload():
             app.logger.debug("No file provided to /upload/")
     else:
         app.logger.debug("Unimplemented /upload/ request method: " + request.method)
+
+
+###
+# Factor Graph API
+###
+
+# Get graph
+@app.route('/api/v1/graph', methods=['GET'])
+def graph():
+    if request.method == 'GET':
+        return factor_graph.to_json()
+
+# Get Factor types
+@app.route('/api/v1/factors', methods=['GET'])
+def factors():
+    if request.method == 'GET':
+        factor_list = get_factor_extensions()
+        return json.dumps({"factor-types": factor_list})
+
+# Get nodes
+@app.route('/api/v1/graph/nodes', methods=['GET', 'POST'])
+def nodes():
+    if request.method == 'GET':
+        return factor_graph.nodes_to_json()
+    elif request.method == 'POST':
+        if request.headers['content-type'] == 'application/json':
+            # Ensure data is valid JSON
+            try:
+                data = json.loads(request.data)
+            except ValueError:
+                return Response(status=405)
+            node_type = data['node_type']
+            node_id = factor_graph.add_node(node_type)
+            return json.dumps({"node_id":node_id})
+        else:
+            # Unsupported content type.
+            return Response(status=400)
+
+        # if not request.json or not 'node_type' in request.json:
+        #     abort(400)
+        # else:
+        #     node_type = request.json['node_type']
+        #     node_id = factor_graph.addNode(node_type)
+        #     return node_id
+
+@app.route('/api/v1/graph/node/<node_id>', methods=['GET', 'DELETE'])
+def node(node_id):
+    if request.method == 'GET':
+        return factor_graph.node_to_json(node_id)
+    elif request.method == 'DELETE':
+        factor_graph.delete_node(node_id)
+        return json.dumps({"node_id": node_id})
+
+
+@app.route('/api/vi/graph/edges', methods=['GET','POST'])
+@app.route('/api/vi/graph/edges/<edge_id>', methods=['GET','DELETE'])
+def edges(edge_id=None):
+    if edge_id:
+        # Individual edge
+        if request.method == 'GET':
+            edge = factor_graph.get_edge(edge_id)
+            return edge.to_json()
+
+        elif request.method == 'DELETE':
+            factor_graph.delete_edge_by_id(edge_id)
+            return json.dumps({"edge_id": edge_id})
+    else:
+        # All edges
+        if request.method == 'GET':
+            edges = factor_graph.get_edges()
+            edge_data = [{"id": e.id, "src_uri": e.src_uri, "dest_uri": e.dest_uri} for e in edges]
+            return json.dumps({"edges": edge_data})
+        elif request.method == 'POST':
+            if request.headers['content-type'] == 'application/json':
+                try:
+                    data = json.loads(request.data)
+                    src_uri = data['src_uri']
+                    dest_uri = data['dest_uri']
+                    edge_id = factor_graph.add_edge(src_uri, dest_uri)
+                    if not edge_id:
+                        app.logger.debug("No id?")
+                    return json.dumps({"edge_id": edge_id})
+                except ValueError:
+                    return Response(status=405)
 
 @app.after_request
 def add_header(response):

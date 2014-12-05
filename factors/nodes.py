@@ -1,5 +1,6 @@
 from models import Table
 import uuid
+import json
 from urlparse import urlparse
 
 class Node(object):
@@ -119,6 +120,7 @@ class TerminalEdge(object):
         :param dest: dest URI
         :return:
         '''
+        self.id = str(uuid.uuid4())
         self.src_uri = src_uri
         self.src_id = Node.id_from_uri(src_uri)
         self.dest_uri = dest_uri
@@ -126,7 +128,10 @@ class TerminalEdge(object):
 
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        return self.src_uri == other.src_uri and self.dest_uri == other.dest_uri
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def to_json(self):
+        return json.dumps({"edge_id": self.id, "src_uri": self.src_uri, "dest_uri": self.dest_uri})

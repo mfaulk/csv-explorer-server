@@ -29,8 +29,11 @@ def _import_module_in_package(name):
     '''
     m = __import__(name)
     for n in name.split(".")[1:]:
-        m = getattr(m, n)
+       m = getattr(m, n)
     return m
+    #m = importlib.import_module(name)
+    #return m
+
 
 def camel_case_to_lower_case_underscore(string):
     """
