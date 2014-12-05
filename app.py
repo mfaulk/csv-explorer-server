@@ -1,18 +1,8 @@
-"""
-Flask Documentation:     http://flask.pocoo.org/docs/
-Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
-Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
-
-This file creates your application.
-"""
 
 import os
-import requests
 from flask import Flask, render_template, request, redirect, url_for, Response, make_response, abort
 from flask.ext.cors import CORS
 import json
-from bson import json_util
-from bson.objectid import ObjectId
 from mongoengine import connect
 from models import Table, Row, Cell
 from factors.factor_graph import FactorGraph

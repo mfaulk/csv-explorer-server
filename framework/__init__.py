@@ -6,7 +6,7 @@ import imp
 import os
 import inspect
 import sys
-from factors.nodes import FactorNode
+from factors.nodes import FactorNode, SourceNode
 import extensions
 
 
@@ -116,10 +116,26 @@ def get_factor_extensions():
         for klass in subclasses_in_module(base_class, module):
             class_name = klass.__name__
             input_terminals = klass.describe_input_terminals()
-            #print(input_terminals)
             output_terminals = klass.describe_output_terminals()
-            #print(output_terminals)
             class_info = {'class_name': class_name, 'in': input_terminals, 'out': output_terminals}
+            info.append(class_info)
+    sys.path = _initial_path
+    return info
+
+def get_source_extensions():
+    info = []
+    base_class = SourceNode
+    # This locates the extensions by getting the directory of the current file.
+    extensions_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'extensions')
+    module_names = set([os.path.splitext(module)[0] for module in os.listdir(extensions_path) if module.endswith('.py')])
+    _initial_path = sys.path
+    sys.path.append(extensions_path)
+    for module_name in module_names:
+        module = import_module(module_name)
+        for klass in subclasses_in_module(base_class, module):
+            class_name = klass.__name__
+            output_terminals = klass.describe_output_terminals()
+            class_info = {'class_name': class_name, 'out': output_terminals}
             info.append(class_info)
     sys.path = _initial_path
     return info

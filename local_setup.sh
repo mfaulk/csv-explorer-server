@@ -5,7 +5,4 @@
 
 source ./env/bin/activate
 
-# Local Postgres database
-export DATABASE_URL="postgres://mfaulk@localhost/csv-explorer-tables"
-
 export APP_SETTINGS="config.DevelopmentConfig" 
