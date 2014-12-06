@@ -81,6 +81,10 @@ def nodes():
             except ValueError:
                 return Response(status=405)
             node_type = data['node_type']
+            # if args, pass them.
+            args = dict()
+            if 'args' in data:
+                args = data['args']
             node_id = factor_graph.add_node(node_type)
             return json.dumps({"node_id":node_id})
         else:

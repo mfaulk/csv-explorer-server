@@ -115,9 +115,10 @@ def get_factor_extensions():
         module = import_module(module_name)
         for klass in subclasses_in_module(base_class, module):
             class_name = klass.__name__
-            input_terminals = klass.describe_input_terminals()
-            output_terminals = klass.describe_output_terminals()
-            class_info = {'class_name': class_name, 'in': input_terminals, 'out': output_terminals}
+            #input_terminals = klass.describe_input_terminals()
+            #output_terminals = klass.describe_output_terminals()
+            #class_info = {'class_name': class_name, 'in': input_terminals, 'out': output_terminals}
+            class_info = {'class_name': class_name}
             info.append(class_info)
     sys.path = _initial_path
     return info

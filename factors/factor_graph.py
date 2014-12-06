@@ -3,8 +3,9 @@ from itertools import chain
 from copy import copy
 import json as JSON
 from uuid import UUID
-from factors.nodes import Node, SourceNode, FactorNode, ReportNode, TerminalEdge
+from factors.nodes import Node, SourceNode, FactorNode, TerminalEdge
 import factors.node_factory
+from factors.context import Context
 
 
 class FactorGraph(object):
@@ -16,27 +17,29 @@ class FactorGraph(object):
         self._edges = defaultdict(list)
 
         self._edges_by_id = dict()
+        self._context = Context()
 
 
-    def add_node(self, class_name, extensions_path="framework.extensions"):
+    def add_node(self, class_name, extensions_path="framework.extensions", args=None):
         '''
         :param class_name:
         :param extensions_path:
         :return:
         '''
-        node = factors.node_factory.get_instance(class_name, extensions_path)
+        node = factors.node_factory.get_instance(class_name, self._context, extensions_path=extensions_path, args=args)
         assert isinstance(node, Node)
         self._nodes[node.id] = node
+        self._context.add_node(node)
         #self.compute()
         return node.id
 
     def delete_node(self, node_id):
-        self._nodes.pop(node_id, None)
+        node = self._nodes.pop(node_id, None)
+        self._context.remove_node(node)
         # delete all edges incident on this node
         edges = self._edges.pop(node_id, list())
         for edge in edges:
             self.delete_edge(edge)
-
 
     def add_edge(self, src_uri, dest_uri):
         src_id = Node.id_from_uri(src_uri)
@@ -56,11 +59,6 @@ class FactorGraph(object):
         if edge_id in self._edges_by_id:
             edge = self._edges_by_id.pop(edge_id)
             self.delete_edge(edge)
-
-    # def delete_edge_by_uri(self, src_uri, dest_uri):
-    #     edge = TerminalEdge(src_uri, dest_uri)
-    #     self.delete_edge(edge)
-    #     return edge.id
 
     def delete_edge(self, edge):
         src_id = edge.src_id
@@ -114,8 +112,6 @@ class FactorGraph(object):
             elif isinstance(node, FactorNode):
                 info['inputs'] = node.describe_input_terminals()
                 info['outputs'] = node.describe_output_terminals()
-            elif isinstance(node, ReportNode):
-                info['inputs'] = node.describe_input_terminals()
             else:
                 print(self.__class__.__name__ + ": Unknown node type " + node.__class__.__name__)
         return info

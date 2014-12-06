@@ -23,10 +23,7 @@ class GraphApiTests(unittest.TestCase):
         self.assertEqual(rv.status, "200 OK")
 
         expected = {"factor-types": [
-            {"class_name": "IdentityFactor",
-             "out": [{"type": "STRING", "name": "OUTPUT"}],
-             "in": [{"type": "STRING", "name": "INPUT"}]}]
-        }
+            {"class_name": "IdentityFactor"}]}
 
         self.assertEqual(json.loads(rv.data), expected)
 
@@ -37,8 +34,10 @@ class GraphApiTests(unittest.TestCase):
         }
         self.assertEqual(json.loads(rv.data), expected)
 
-    def test_post_node(self):
-        data = json.dumps({"node_type":"IdentityFactor"})
+    def test_post_nodes(self):
+        # add source node
+
+        data = json.dumps({"node_type":"SourceNode"})
         rv = self.app.post('/api/v1/graph/nodes',
                            data=data,
                            content_type='application/json')
@@ -49,29 +48,7 @@ class GraphApiTests(unittest.TestCase):
         nodes = json.loads(nodes_response.data)['nodes']
         self.assertEqual(len(nodes), 1)
 
-    def test_delete_node(self):
-        data = json.dumps({"node_type":"IdentityFactor"})
         rv = self.app.post('/api/v1/graph/nodes',
-                           data=data,
-                           content_type='application/json')
-        node_id = json.loads(rv.data)['node_id']
-
-        delete_response = self.app.delete('/api/v1/graph/node/' + node_id)
-        self.assertTrue('node_id' in json.loads(delete_response.data))
-
-        nodes_response = self.app.get('/api/v1/graph/nodes')
-        self.assertTrue('nodes' in nodes_response.data)
-        nodes = json.loads(nodes_response.data)['nodes']
-        self.assertEqual(len(nodes), 0)
-
-
-    def test_post_two_nodes(self):
-        data = json.dumps({"node_type":"IdentityFactor"})
-        self.app.post('/api/v1/graph/nodes',
-                           data=data,
-                           content_type='application/json')
-
-        self.app.post('/api/v1/graph/nodes',
                            data=data,
                            content_type='application/json')
 
@@ -80,21 +57,38 @@ class GraphApiTests(unittest.TestCase):
         nodes = json.loads(nodes_response.data)['nodes']
         self.assertEqual(len(nodes), 2)
 
+    def test_delete_node(self):
+
+        data = json.dumps({"node_type":"SourceNode"})
+        rv = self.app.post('/api/v1/graph/nodes',
+                           data=data,
+                           content_type='application/json')
+
+        node_id = json.loads(rv.data)['node_id']
+
+        delete_response = self.app.delete('/api/v1/graph/node/' + node_id)
+        self.assertTrue('node_id' in json.loads(delete_response.data))
+        nodes_response = self.app.get('/api/v1/graph/nodes')
+        self.assertTrue('nodes' in nodes_response.data)
+        nodes = json.loads(nodes_response.data)['nodes']
+        self.assertEqual(len(nodes), 0)
+
+
     def _num_edges(self, rv):
         return len(json.loads(rv.data)['edges'])
 
 
     def test_add_delete_edges(self):
-        node_a_response = self.app.post('/api/v1/graph/nodes',
-                           data=json.dumps({"node_type":"IdentityFactor"}),
+        data = json.dumps({"node_type":"SourceNode"})
+        rv = self.app.post('/api/v1/graph/nodes',
+                           data=data,
                            content_type='application/json')
-        node_a_id = json.loads(node_a_response.data)['node_id']
+        node_a_id = json.loads(rv.data)['node_id']
 
-        node_b_response = self.app.post('/api/v1/graph/nodes',
-                           data=json.dumps({"node_type":"IdentityFactor"}),
+        rv = self.app.post('/api/v1/graph/nodes',
+                           data=data,
                            content_type='application/json')
-        node_b_id = json.loads(node_b_response.data)['node_id']
-
+        node_b_id = json.loads(rv.data)['node_id']
 
         edge_data = {"src_uri": "node://" + node_a_id + "/OUTPUT",
                     "dest_uri": "node://" + node_b_id + "/INPUT"}

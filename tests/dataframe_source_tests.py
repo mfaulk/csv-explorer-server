@@ -2,10 +2,13 @@ import unittest
 import pandas as pd
 from pandas import Series
 from framework.extensions.dataframe_source import DataframeSource
+from factors.nodes import Node
+from factors.context import Context
 
 class DataframeSourceTests(unittest.TestCase):
 
     def setUp(self):
+        self.context = Context()
         self.df1 = pd.DataFrame({
             'A': 1.,
             'B': pd.Timestamp('20130102'),
@@ -14,7 +17,7 @@ class DataframeSourceTests(unittest.TestCase):
             'E': 'foo'})
 
     def test_df(self):
-        node = DataframeSource(self.df1)
+        node = DataframeSource(self.context, args={'df': self.df1})
 
         A = node.get_terminal("A")
         self.assertTrue(isinstance(A, Series))
@@ -25,7 +28,8 @@ class DataframeSourceTests(unittest.TestCase):
         self.assertEqual(E[0], 'foo')
 
     def test_describe_terminals(self):
-        node = DataframeSource(self.df1)
-        terminals = node.describe_output_terminals()
-        expected_terminals = set(["A", "B", "C", "D", "E"])
-        self.assertEqual(expected_terminals, set(terminals.keys()))
+        node = DataframeSource(self.context, args={'df': self.df1})
+        terminal_uris = node.describe_output_terminals()
+        terminal_names = ["A", "B", "C", "D", "E"]
+        expected_terminal_uris = set([Node.to_uri(node, terminal_name) for terminal_name in terminal_names])
+        self.assertEqual(expected_terminal_uris, set(terminal_uris))

@@ -11,8 +11,17 @@ class Node(object):
     TYPE_STRING = "STRING"
     TYPE_NUMBER = "NUMBER"
 
-    def __init__(self):
+    def __init__(self, context=None, args=None):
         self.id = str(uuid.uuid4())
+
+    def get_terminal(self, terminal_name):
+        '''
+
+        :param terminal_name:
+        :return: A pandas Series
+        '''
+        pass
+
 
     def to_uri(self, terminal_name):
         # TODO: ensure that terminal name makes a valid URI (no extra slashes, no spaces, ...)
@@ -40,7 +49,7 @@ class SourceNode(Node):
     ''' An initial data source. It may not have parents.
     '''
 
-    def __init__(self):
+    def __init__(self,context=None,args=None):
         '''
         Init a node for a data source.
         '''
@@ -65,26 +74,25 @@ class FactorNode(Node):
     ''' A derived data source. This should be an abstract class
     '''
 
-    def __init__(self):
+    def __init__(self,context=None, args=None):
         super(FactorNode,self).__init__()
 
-    @staticmethod
-    def describe_input_terminals():
-        '''
+    # @staticmethod
+    # def describe_input_terminals():
+    #     '''
+    #
+    #     :return: A dict mapping input terminal names to their data types
+    #     '''
+    #     return dict()
 
-        :return: A dict mapping input terminal names to their data types
-        '''
-        return dict()
 
-    @staticmethod
-    def describe_output_terminals():
+    def describe_output_terminals(self):
         '''
 
         :return: A dict mapping output terminal names to their data types
         '''
         return dict()
 
-
     def compute(self, context=None):
         '''
         Evaluate this node.
@@ -94,21 +102,20 @@ class FactorNode(Node):
         pass
 
 
-class ReportNode(Node):
-    ''' A derived product that does not persist data.
-    '''
-
-    def __init__(self, name="ReportNode"):
-        self.name = name
-        super(ReportNode,self).__init__()
-
-    def compute(self, context=None):
-        '''
-        Evaluate this node.
-        :param context: a dict mapping this node's input terminal names to source data URIs
-        :return:
-        '''
-        pass
+# class ReportNode(Node):
+#     ''' A derived product that does not persist data.
+#     '''
+#
+#     def __init__(self):
+#         super(ReportNode,self).__init__()
+#
+#     def compute(self, context=None):
+#         '''
+#         Evaluate this node.
+#         :param context: a dict mapping this node's input terminal names to source data URIs
+#         :return:
+#         '''
+#         pass
 
 
 class TerminalEdge(object):

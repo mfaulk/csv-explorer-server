@@ -1,16 +1,17 @@
 from factors.nodes import SourceNode
 
 class DataframeSource(SourceNode):
-    def __init__(self, df):
-        self.df = df
+    def __init__(self, context, args):
+        self.df = args['df']
         super(SourceNode,self).__init__()
 
     def describe_output_terminals(self):
         '''
 
-        :return: A dict mapping output terminal names to their data types
+        :return: A list of terminal URIs
         '''
-        return self.df.to_dict()
+        #return self.df.to_dict()
+        return [self.to_uri(terminal_name) for terminal_name in self.df.columns.tolist()]
 
     def compute(self):
         '''

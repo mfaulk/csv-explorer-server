@@ -12,7 +12,7 @@ class SampleFactor (FactorNode):
         PARAMETERS:
     '''
 
-    def __init__(self):
+    def __init__(self,context,args=None):
 
         super(SampleFactor,self).__init__()
 

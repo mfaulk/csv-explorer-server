@@ -12,7 +12,7 @@ class AnotherFactor (FactorNode):
         PARAMETERS:
     '''
 
-    def __init__(self):
+    def __init__(self, context, args=None):
 
         super(AnotherFactor,self).__init__()
 

@@ -1,25 +1,27 @@
-def get_instance(class_name, extensions_path='framework.extensions'):
+def get_instance(class_name, context, extensions_path='framework.extensions', args=None):
     '''
     Obtain an instance of a Factor Graph node by class name.
     :param class_name:
     :param extensions_path:
     :return: Instance of class, or None
     '''
+    if args is None: args = dict()
     instance = None
     module  = _import_module_in_package('factors.nodes')
     if hasattr(module, class_name):
         class_ = getattr(module, class_name)
-        instance = class_()
+        instance = class_(context, args)
     else:
-        instance = get_instance_from_extensions(class_name, extensions_path)
+        instance = get_instance_from_extensions(class_name, context, extensions_path, args=args)
     return instance
 
-def get_instance_from_extensions(class_name, extensions_path):
+def get_instance_from_extensions(class_name, context, extensions_path, args=None):
+    if args is None: args = dict()
     module_name = camel_case_to_lower_case_underscore(class_name)
     module_path = extensions_path + '.' + module_name
     module = _import_module_in_package(module_path)
     class_ = getattr(module, class_name)
-    return class_()
+    return class_(context, args)
 
 def _import_module_in_package(name):
     '''
