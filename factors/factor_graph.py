@@ -71,6 +71,10 @@ class FactorGraph(object):
     def get_edges(self):
         return set(chain(*self._edges.values()))
 
+    def terminal_to_json(self, uri):
+        series = self._context.resolve_uri(uri)
+        return series.to_json()
+
     def get_edge(self, edge_id):
         edge = None
         if edge_id in self._edges_by_id:
@@ -109,7 +113,7 @@ class FactorGraph(object):
             info['type'] = node.__class__.__name__
             if isinstance(node, DataframeSource):
                 info['outputs'] = node.describe_output_terminals()
-                info['df'] = JSON.loads(node.df.to_json())
+                #info['df'] = JSON.loads(node.df.to_json())
             elif isinstance(node, SourceNode):
                 info['outputs'] = node.describe_output_terminals()
             elif isinstance(node, FactorNode):

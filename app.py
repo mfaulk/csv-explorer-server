@@ -107,6 +107,11 @@ def nodes():
             # Unsupported content type.
             return Response(status=400)
 
+@app.route('/api/vi/graph/terminal/<path:terminal_uri>', methods=['GET'])
+def get_terminal(terminal_uri):
+    app.logger.debug("Terminal URI: " + terminal_uri)
+    return factor_graph.terminal_to_json(terminal_uri)
+
 @app.route('/api/v1/graph/node/<node_id>', methods=['GET', 'DELETE'])
 def node(node_id):
     if request.method == 'GET':
