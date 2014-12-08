@@ -7,7 +7,7 @@ class GraphApiTests(unittest.TestCase):
 
     def setUp(self):
         self.app = app.app.test_client()
-        # Re-initialize the factor graph between tests
+        # Re-initialize the factor graph between tests.
         app.factor_graph = FactorGraph()
 
     def test_empty_graph(self):
@@ -35,8 +35,6 @@ class GraphApiTests(unittest.TestCase):
         self.assertEqual(json.loads(rv.data), expected)
 
     def test_post_nodes(self):
-        # add source node
-
         data = json.dumps({"node_type":"SourceNode"})
         rv = self.app.post('/api/v1/graph/nodes',
                            data=data,
@@ -58,7 +56,6 @@ class GraphApiTests(unittest.TestCase):
         self.assertEqual(len(nodes), 2)
 
     def test_delete_node(self):
-
         data = json.dumps({"node_type":"SourceNode"})
         rv = self.app.post('/api/v1/graph/nodes',
                            data=data,

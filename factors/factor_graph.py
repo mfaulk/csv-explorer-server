@@ -2,8 +2,8 @@ from collections import defaultdict
 from itertools import chain
 from copy import copy
 import json as JSON
-from uuid import UUID
 from factors.nodes import Node, SourceNode, FactorNode, TerminalEdge
+from framework.extensions.dataframe_source import DataframeSource
 import factors.node_factory
 from factors.context import Context
 
@@ -15,7 +15,7 @@ class FactorGraph(object):
         self._nodes = dict()
         # Mapping from node ID to its incident edges
         self._edges = defaultdict(list)
-
+        # Mapping from edge id to Edge object
         self._edges_by_id = dict()
         self._context = Context()
 
@@ -36,7 +36,7 @@ class FactorGraph(object):
     def delete_node(self, node_id):
         node = self._nodes.pop(node_id, None)
         self._context.remove_node(node)
-        # delete all edges incident on this node
+        # Delete all edges incident on this node.
         edges = self._edges.pop(node_id, list())
         for edge in edges:
             self.delete_edge(edge)
@@ -107,7 +107,10 @@ class FactorGraph(object):
             info = dict()
             info['id'] = str(node.id)
             info['type'] = node.__class__.__name__
-            if isinstance(node, SourceNode):
+            if isinstance(node, DataframeSource):
+                info['outputs'] = node.describe_output_terminals()
+                info['df'] = JSON.loads(node.df.to_json())
+            elif isinstance(node, SourceNode):
                 info['outputs'] = node.describe_output_terminals()
             elif isinstance(node, FactorNode):
                 info['inputs'] = node.describe_input_terminals()

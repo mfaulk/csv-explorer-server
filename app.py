@@ -3,6 +3,9 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, Response, make_response, abort
 from flask.ext.cors import CORS
 import json
+import base64
+import pandas as pd
+from StringIO import StringIO
 from factors.factor_graph import FactorGraph
 from framework import get_factor_extensions
 
@@ -80,12 +83,25 @@ def nodes():
                 data = json.loads(request.data)
             except ValueError:
                 return Response(status=405)
-            node_type = data['node_type']
+            node_id = None
             # if args, pass them.
             args = dict()
             if 'args' in data:
                 args = data['args']
-            node_id = factor_graph.add_node(node_type)
+
+            node_type = data['node_type']
+            if node_type == 'DataframeSource':
+                app.logger.debug('POSTing DataframeSource...')
+                if 'csv_data' in data:
+                    csv_string = base64.b64decode(data['csv_data'])
+                    df = pd.io.parsers.read_table(StringIO(csv_string), sep=',')
+                    args['df'] = df
+                    node_id = factor_graph.add_node(node_type, args=args)
+                else:
+                    app.logger.debug("No CSV data provided!")
+                    return Response(status=400)
+            else:
+                node_id = factor_graph.add_node(node_type, args=args)
             return json.dumps({"node_id":node_id})
         else:
             # Unsupported content type.
